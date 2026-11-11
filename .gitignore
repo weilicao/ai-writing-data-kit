@@ -1,0 +1,5 @@
+mydata/
+*_REVIEW.txt
+*.zip
+__pycache__/
+TEST_NOTES.md
