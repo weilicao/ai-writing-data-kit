@@ -57,7 +57,9 @@ After that I may leave. Don't ask me anything else until C unless something is b
    window, and prints the `window.KIT_CONFIG` line for the chat exports.
 4. **claude.ai:** on https://claude.ai run that `window.KIT_CONFIG` line, then the whole of `claude_ai_export.js`;
    poll the same way. **ChatGPT:** the same on https://chatgpt.com with `chatgpt_export.js`. A site where I have
-   no account or no chats is fine: note it and go on.
+   no account or no chats is fine: note it and go on. If I'm logged in to another AI chat (Gemini, Copilot,
+   Perplexity...), the kit can't export it yet: write its name in `about.json` → `optional.ai_tools_used_for`
+   and mention it in the summary.
 5. `python3 bundle.py auto mydata`. It collects the downloads, copies my Claude Code / Codex sessions that
    contain the paper's text or title, keeps the chats related to the paper, checks and packs.
    - If an export failed (e.g. missing diffs), run that export once more, then `auto` again.

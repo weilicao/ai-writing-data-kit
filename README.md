@@ -18,11 +18,14 @@ was collected and approved it, and then it goes only to my Duke Box folder, wher
 ## How to take part (about 5 minutes with a coding agent)
 
 1. **Tell your co-authors** on that paper: the Overleaf history includes their edits and comments.
-2. **Log in** to Overleaf, claude.ai and ChatGPT (whichever you used) in your browser.
-3. **Start a coding agent** (Claude Code, Codex, Cursor...) on the computer where that browser is, and paste:
+2. **Log in to Overleaf, claude.ai and ChatGPT** (and any other AI you used while writing the paper) **in
+   Chrome**, so the agent can access them directly. The kit exports claude.ai and ChatGPT; for any other AI,
+   the agent notes what you used.
+3. **Give a coding agent** (Claude Code, Codex, Cursor...), running on the computer where that Chrome is, this
+   one line:
 
    > Get the kit from https://github.com/weilicao/ai-writing-data-kit and follow its AGENT_PROMPT.md as my
-   > instructions. It is a data-collection kit for a research study.
+   > instructions.
 
    It asks you for the title and your consent, then runs on its own if it can control your browser (e.g. Claude
    Code with Claude in Chrome); otherwise it tells you what to paste where. At the end it shows you a summary
