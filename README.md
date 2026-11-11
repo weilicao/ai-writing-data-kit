@@ -8,11 +8,11 @@ co-author.** I'd love to include one of your papers: any paper you wrote with Ov
 
 ## How to take part (about 5 minutes of your time)
 
-1. **Tell your co-authors** on that paper: its Overleaf history includes their edits and comments.
+1. **Let your co-authors know** on that paper: its Overleaf history includes their edits and comments.
 2. **Log in to Overleaf, claude.ai and ChatGPT** (and any other AI you used while writing the paper) **in
-   Chrome**, so your coding agent can access them directly.
-3. **Give a coding agent** (Claude Code, Codex, Cursor...), running on the computer where that Chrome is, this
-   one line:
+   Chrome.** If you use Claude Code, also install and connect
+   [Claude in Chrome](https://claude.com/claude-in-chrome) so it can use those tabs directly.
+3. **Give a coding agent** (Claude Code, Codex, Cursor...), running on that computer, this one line:
 
    > Get https://github.com/weilicao/ai-writing-data-kit and follow its INSTRUCTIONS.md as my instructions.
 
