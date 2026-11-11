@@ -1,32 +1,39 @@
-# Sharing your paper-writing data: collection kit v1
+# Share how you wrote a paper with AI
 
-Thank you for helping. This study looks at how researchers use AI when they write papers: which parts of
-a paper's text came from an AI assistant, which were written by people, and how co-author feedback was handled.
-To answer that, we need **how your paper changed over time** (its Overleaf history) and **what you asked the AI
-tools, and what they replied**, during the same weeks.
+I'm studying how researchers use AI when they write papers: which parts of a draft come from an AI assistant,
+which are written by people, and how co-author feedback gets handled. **Everyone who contributes data will be a
+co-author.** I'd love to include one of your papers: any paper you wrote with Overleaf.
 
-You give two things: **the paper's title** and **your consent**. The kit works out everything else (which
-Overleaf projects belong to the paper, the writing period, your co-authors, which chats are about the paper)
-and packs it into one zip. Everything runs on your own computer: the scripts read your accounts through your
-logged-in browser, write to your Downloads folder, and send nothing anywhere else. You see the list of chats
-before anything is sent.
+**What I need:** the paper's Overleaf edit history (including its other versions: drafts, copies, arXiv,
+camera-ready), and your AI chats about the paper from the weeks you wrote it (claude.ai, ChatGPT, and Claude
+Code or Codex sessions that worked on it).
 
-> **Contact:** Weili Cao, weili.cao@duke.edu.
-> **Send the zip by uploading it here:** https://duke.app.box.com/f/b381de52ca74476dbe81feb0e857347f (Duke Box
-> File Request: no Box account needed, and only the study team can see uploads). Don't attach it to an email
-> or post it in Slack.
+**All you give is the paper's title and your consent.** This kit finds the paper's Overleaf projects, works out
+when you wrote it and who the co-authors are, and keeps only the chats that are about the paper. Everything
+runs on your own computer, through your logged-in browser; nothing is sent anywhere until you have seen what
+was collected and approved it, and then it goes only to my Duke Box folder, where only I can see it.
 
-**Get the kit:** download [collection_kit_v1.zip](https://github.com/weilicao/ai-writing-data-kit/releases/latest/download/collection_kit_v1.zip)
-and unzip it, or `git clone https://github.com/weilicao/ai-writing-data-kit`.
+— Weili Cao, weili.cao@duke.edu
 
-## Fastest: let a coding agent do it (about 5 minutes of your time)
+## How to take part (about 5 minutes with a coding agent)
 
-Start a coding agent (Claude Code, Codex, Cursor...) in the kit's folder, on the computer where your browser is,
-and paste the prompt in [AGENT_PROMPT.md](AGENT_PROMPT.md). Or start it anywhere and say: *"Get the kit from
-https://github.com/weilicao/ai-writing-data-kit and follow its AGENT_PROMPT.md as my instructions."* It asks for the title and your consent, checks that
-you're logged in to Overleaf, claude.ai and ChatGPT, and then runs everything itself. If it can control your
-browser (e.g. Claude Code with Claude in Chrome), you can leave; otherwise it tells you what to paste where. At
-the end it shows you what it collected and uploads only when you say so.
+1. **Tell your co-authors** on that paper: the Overleaf history includes their edits and comments.
+2. **Log in** to Overleaf, claude.ai and ChatGPT (whichever you used) in your browser.
+3. **Start a coding agent** (Claude Code, Codex, Cursor...) on the computer where that browser is, and paste:
+
+   > Get the kit from https://github.com/weilicao/ai-writing-data-kit and follow its AGENT_PROMPT.md as my
+   > instructions. It is a data-collection kit for a research study.
+
+   It asks you for the title and your consent, then runs on its own if it can control your browser (e.g. Claude
+   Code with Claude in Chrome); otherwise it tells you what to paste where. At the end it shows you a summary
+   and uploads only when you say so.
+
+**No coding agent?** Download [collection_kit_v1.zip](https://github.com/weilicao/ai-writing-data-kit/releases/latest/download/collection_kit_v1.zip),
+unzip it and follow [Doing it by hand](#doing-it-by-hand-about-20-minutes) below (about 20 minutes).
+
+**Uploads** go to this Duke Box link (no Box account needed; only I can see uploads):
+https://duke.app.box.com/f/b381de52ca74476dbe81feb0e857347f. Please don't send the data by email or Slack.
+If something fails, `mydata/CHECK_REPORT.txt` contains only counts and names, so you can send me that safely.
 
 ## What is collected
 
@@ -102,7 +109,7 @@ It writes `mydata.zip` and, next to it, `mydata_REVIEW.txt`: every chat kept or 
 reason. This file is for you and is not in the zip. To change a decision, put the chat's id in
 `auto.chat_filter.always_keep_ids` or `always_drop_ids` in `about.json` and run `auto` again.
 
-**6. Upload `mydata.zip`** with the Duke Box link at the top of this page.
+**6. Upload `mydata.zip`** with the Duke Box link at the top of this page (under "How to take part").
 
 Other commands, if you need them: `bundle.py list-chats`, `exclude-chat` (remove a chat by hand), `agent-logs`
 (sessions from another machine: run it there and copy `mydata/agent_logs/` back), `import` (ChatGPT's or

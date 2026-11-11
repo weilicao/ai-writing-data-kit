@@ -1,8 +1,14 @@
 # Prompt for your coding agent
 
 Paste everything below the line into your coding agent (Claude Code, Codex, Cursor...), started in this
-folder, on the same computer as the browser you use for Overleaf. The agent asks you two things, then runs on
+folder, on the same computer as the browser you use for Overleaf; or just tell it to get the kit from
+https://github.com/weilicao/ai-writing-data-kit and follow this file. The agent asks you two things, then runs on
 its own, and shows you the result before anything is uploaded.
+
+(For the agent: if you were pointed to the GitHub page, first get the kit: `git clone
+https://github.com/weilicao/ai-writing-data-kit`, or download and unzip
+https://github.com/weilicao/ai-writing-data-kit/releases/latest/download/collection_kit_v1.zip, and work in that
+folder. Then follow everything below the line.)
 
 ---
 
