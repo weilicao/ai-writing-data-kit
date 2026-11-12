@@ -78,11 +78,13 @@ poll it, so your tool call doesn't time out.
    (`{u: 1234}`). Use up to 4 requests in parallel.
 4. **Final text with authors.** `GET /project/<id>/filetree/diff?from=0&to=<last toV>` lists the files. For each
    file that isn't removed or binary, `GET /project/<id>/diff?pathname=<path>&from=0&to=<last toV>`; store the
-   segments **with full `u` text** in `full_attributed_diff[path]`.
+   segments **with full `u` text** in `full_attributed_diff[path]`. For binary files (images, PDFs), store
+   `{binary: true}` instead of a segment list.
 5. **Also:** `GET /project/<id>/threads` (review comments), `/project/<id>/labels` (named versions), and
    `/project/<id>/github-sync/status` (`{enabled, repo, merge_status}`: the GitHub repo the project syncs with;
    see section 7).
-6. **Remove emails:** every `users` entry becomes `{id, first_name, last_name}`. Record the user's own Overleaf id
+6. **Remove emails:** every `users` entry (in updates, threads and `users`) becomes `{id, first_name, last_name}`,
+   and `github_sync` keeps only `{enabled, repo, merge_status}` (the status also returns the owner's email). Record the user's own Overleaf id
    (the page's `<meta name="ol-user_id">`) as `about.json` → `contributor.overleaf_id`.
 7. Save each project as `overleaf_<id>.json`:
    `{source: "overleaf", project_id, project_name, exported_at, last_version, updates, full_attributed_diff,
@@ -107,7 +109,7 @@ the projects. A text edit is an update with at least one `i` or `d` segment, ign
 - For each claude.ai Project those conversations belong to: `GET /api/organizations/<org>/projects/<uuid>` and
   `.../projects/<uuid>/docs` (knowledge files; drafts are often uploaded there).
 - **Claude Code on the web** (once per user, not per account): `GET /v1/code/sessions?limit=50` (then
-  `&resume_token=<resume_token>` until it is absent), **with the header `anthropic-version: 2023-06-01`**. For each
+  `&resume_token=<resume_token>` until it is absent, or until a page adds no new session ids), **with the header `anthropic-version: 2023-06-01`**. For each
   session active in the window (`created_at`, `last_event_at`), get all events: `GET /v1/code/sessions/<id>/events`,
   then `?cursor=<next_cursor>` until it is absent, with the same header.
 - Save `claude_ai_<org uuid>.json`: `{source: "claude.ai", org, exported_at, window, conversations: [full
@@ -214,10 +216,12 @@ the home folder):
 
 Decide **with code**, not by reading:
 
-- Paper text = all text inserted in any Overleaf update, plus the final text of every file. Split it into lowercase
-  words (`[a-z0-9]+`) and take every run of 6 consecutive words.
-- Keep an item if **at least 3 distinct 6-word runs** of its text (all string values, with JSON escapes decoded)
-  also occur in the paper text, **or** it contains the paper's title (ignoring case and spacing), **or** the name
+- Paper text = all text inserted in any Overleaf update, plus the final text of every `.tex` file. Leave out
+  `.bib`, `.sty`, `.cls` and `.bst` files: their boilerplate (venue names, URLs) also appears in unrelated chats.
+  Split it into lowercase words (`[a-z0-9]+`) and take every run of 6 consecutive words.
+- An item's text = what the user and the AI wrote: message text, attachments, and tool inputs and outputs. Not
+  metadata, system prompts or tool and skill lists: those mention `latex` in nearly every chat.
+- Keep an item if **at least 3 distinct 6-word runs** of its text also occur in the paper text, **or** it contains the paper's title (ignoring case and spacing), **or** the name
   of a synced repo, **or** it is about LaTeX or Overleaf (`latex`, `overleaf`, `.tex`, `.bib`, `\section`, `\cite`...).
 - Everything else from the window is left out of the bundle. Record each left-out item in `about.json` →
   `excluded` with **only** its file, id, date, message count and the reason.
@@ -240,7 +244,8 @@ Decide **with code**, not by reading:
 - **Secrets:** scan every file in `mydata/` for API keys and tokens (`sk-ant-...`, `sk-...`, `ghp_...`,
   `github_pat_...`, `AKIA...`, `xox...-`, `hf_...`, `-----BEGIN ... PRIVATE KEY-----`). Report which file and
   what kind, never the value, and ask the user whether to remove them.
-- **Emails:** none left in Overleaf `users` or Git authors.
+- **Emails:** none left in Overleaf `users`, threads, `github_sync` or Git authors (emails inside the paper's own
+  files, e.g. in `.sty` headers, stay).
 
 ## 11. Review and upload
 
