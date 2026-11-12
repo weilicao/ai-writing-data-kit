@@ -83,7 +83,8 @@ poll it, so your tool call doesn't time out.
 5. **Also:** `GET /project/<id>/threads` (review comments), `/project/<id>/labels` (named versions), and
    `/project/<id>/github-sync/status` (`{enabled, repo, merge_status}`: the GitHub repo the project syncs with;
    see section 7).
-6. **Remove emails:** every `users` entry (in updates, threads and `users`) becomes `{id, first_name, last_name}`,
+6. **Remove emails:** every `users` entry becomes `{id, first_name, last_name}`: in each update's `meta`, in the
+   `meta` of every diff segment (in `updates[k].diffs` and in `full_attributed_diff`), in threads and in `users`;
    and `github_sync` keeps only `{enabled, repo, merge_status}` (the status also returns the owner's email). Record the user's own Overleaf id
    (the page's `<meta name="ol-user_id">`) as `about.json` → `contributor.overleaf_id`.
 7. Save each project as `overleaf_<id>.json`:
@@ -244,7 +245,8 @@ Decide **with code**, not by reading:
 - **Secrets:** scan every file in `mydata/` for API keys and tokens (`sk-ant-...`, `sk-...`, `ghp_...`,
   `github_pat_...`, `AKIA...`, `xox...-`, `hf_...`, `-----BEGIN ... PRIVATE KEY-----`). Report which file and
   what kind, never the value, and ask the user whether to remove them.
-- **Emails:** none left in Overleaf `users`, threads, `github_sync` or Git authors (emails inside the paper's own
+- **Emails:** none left in any Overleaf `users` entry (update and segment `meta` included), threads,
+  `github_sync` or Git authors (emails inside the paper's own
   files, e.g. in `.sty` headers, stay).
 
 ## 11. Review and upload
