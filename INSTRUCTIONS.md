@@ -1,9 +1,15 @@
 # Instructions for the contributor's coding agent
 
-You are helping your user contribute data to a research study on how researchers use AI to write papers.
-Collect **as much as you can** about how one paper of theirs was written: its Overleaf history, their AI chats
-about it, their coding-agent sessions that worked on it, and any Git history of its files. Then check the data,
-show the user a summary, and upload it when they approve.
+You are helping your user contribute to a research study on how researchers use AI to write papers. You will
+collect, **on the user's own machine(s)**, everything about how one paper of theirs was written (its Overleaf
+history, their AI chats about it, their coding-agent sessions that worked on it, the Git history of its files),
+from the sources the user allows; run the analysis in `pipeline/` there; and upload **only the results** when the
+user approves.
+
+**What is uploaded:** `aiw_work/results.zip`, made by `pipeline/analyze.py`: the final text of the paper with a
+label for every word, sentence, paragraph and section; per-label statistics; the first-draft and relevance
+reports; `about.json`; the check report. **What never leaves the user's machines:** the chats, the sessions, the
+Overleaf history and the Git history (`mydata/`, `aiw_work/bundle`, `aiw_work/parsed`, `aiw_work/analysis`).
 
 Work out everything you can yourself. Ask the user only for what is listed in step 1.
 
@@ -16,8 +22,10 @@ uploads): https://duke.app.box.com/f/b381de52ca74476dbe81feb0e857347f
    unpublished paper. Anything you read or print goes to your model provider, so do the collecting, filtering
    and checking **with code that writes to files**, and look only at structure, counts, ids and dates. Don't print
    or read chat text, paper text, or session contents, and never print access tokens or cookies.
-2. **Don't send the data anywhere** except: reading from the sites below through the user's logged-in browser,
-   and the final upload to the Box link above, only after the user approves it.
+2. **The data stays on the user's machines.** Read from the sites below only through the user's logged-in
+   browser, and move files only between the user's own machines (e.g. from their laptop to a server they use, see
+   section 6a). The only upload is `results.zip` to the Box link above, after the user approves it. Never upload
+   `mydata/` or anything else.
 3. **Never type a password or log in for the user.** If a site is logged out, ask them to log in.
 4. **When in doubt, keep.** If you can't tell whether something is about the paper, keep it and say so in the
    summary; the user reviews the list before anything is sent.
@@ -28,21 +36,42 @@ uploads): https://duke.app.box.com/f/b381de52ca74476dbe81feb0e857347f
 
 1. The paper's title (or its Overleaf link).
 2. Which coding agents they used while writing it (Claude Code, Codex, Cursor, Copilot, Gemini CLI, Windsurf,
-   Cline, Aider...), and whether any ran on another machine (a server, cluster or cloud). Assume they used at
-   least one.
-3. Consent: *"Do you agree to share your AI chats and coding-agent sessions from the period you wrote this
-   paper, and the paper's Overleaf and Git history (which include your co-authors' names, edits and comments)?
-   May short excerpts be quoted in publications?"* If they don't agree to share, stop.
+   Cline, Aider...). Assume they used at least one.
+3. **Which sources the analysis may use.** Show this checklist and let them untick any source (default: all):
 
-Also ask them to log in, in Chrome, to Overleaf, claude.ai, ChatGPT and any other AI they used, if they
-haven't. You need a way to run JavaScript in their logged-in Chrome tabs (e.g. Claude in Chrome); if you don't
+   | Source | What it covers |
+   |---|---|
+   | `overleaf` | edit history of the paper's Overleaf projects (required: without it there is nothing to analyse) |
+   | `claude.ai` | claude.ai chats and Projects |
+   | `chatgpt` | ChatGPT chats and Codex cloud tasks |
+   | `claude-code` | Claude Code sessions (terminal, IDE, desktop app, and Claude Code on the web) |
+   | `codex` | Codex CLI sessions |
+   | `cursor` | Cursor chats |
+   | `copilot` | VS Code Copilot Chat |
+   | `gemini-cli` | Gemini CLI |
+   | `other-agents` | Windsurf, Cline, Roo Code, Continue, Aider and others |
+   | `git` | Git history of the paper's files (GitHub sync, local repos) |
+
+   Don't collect a source they untick. Tell them: text that came from a left-out AI source can only be labeled
+   Human or Unclear, never AI.
+4. **Where agents ran.** Which machines (laptop, servers, clusters, cloud VMs). Before asking, run
+   `python3 -I pipeline/find_sessions.py` and show the hints it found, so they only confirm (section 6a). Say on
+   which machine you are running and whether it can reach their browser.
+5. Consent: *"Do you agree to let the analysis use your AI chats, coding-agent sessions and the paper's Overleaf
+   and Git history on your computer, and to share the results: the paper's final text with a label for every part,
+   statistics, and the names of co-authors who edited it? Your chats, sessions and histories are not shared. May
+   short excerpts of the paper be quoted in publications?"* If they don't agree, stop.
+
+Record the checklist in `about.json` → `sources` (section 8). Also ask them to log in, in Chrome, to Overleaf,
+claude.ai, ChatGPT and any other AI they allowed, if they haven't. You need a way to run JavaScript in their logged-in Chrome tabs (e.g. Claude in Chrome); if you don't
 have one, write each browser step as a script they paste into the console (Cmd+Option+J / Ctrl+Shift+J), and
 tell them exactly where.
 
-## 2. Output: the bundle
+## 2. The local bundle
 
-Create a folder `mydata/` (in the current folder) with exactly this layout. Formats are fixed so that every
-contributor's data can be analysed the same way.
+Create a folder `mydata/` (next to this kit, on the machine where the analysis will run; it stays there) with
+exactly this layout. Formats are fixed because `pipeline/` reads them. Leave out the files of sources the user
+unticked.
 
 ```
 mydata/
@@ -54,6 +83,8 @@ mydata/
   git_<owner>__<repo>.json        history of the paper's files in a Git repo (section 7)
   other/                          anything else that helps (other AI tools' exports, notes)
   CHECK_REPORT.txt                counts and names only, no content (section 10)
+
+pipeline/                         (part of this kit) the analysis code; standard library Python >= 3.9
 ```
 
 Large data must never pass through your tool output. In the browser, build the JSON in the page and save it as
@@ -98,7 +129,9 @@ poll it, so your tool call doesn't time out.
 the projects. A text edit is an update with at least one `i` or `d` segment, ignoring updates whose
 `meta.origin.kind` is `history-resync`. Use this window for everything below.
 
-## 4. claude.ai (in a logged-in claude.ai tab)
+## 4. claude.ai (in a logged-in claude.ai tab; only if `claude.ai` is allowed)
+
+Claude Code on the web sessions are collected only if `claude-code` is allowed.
 
 - `GET /api/organizations` lists the accounts. Use each one whose `capabilities` include `"chat"`; the others are
   API accounts without chats (record them in `gaps`).
@@ -119,7 +152,7 @@ the projects. A text edit is an update with at least one `i` or `d` segment, ign
 - If this fails, the fallback is claude.ai → Settings → Privacy → Export data (emailed; no branches): put the
   conversations from the window into the same structure and note it in `gaps`.
 
-## 5. ChatGPT (in a logged-in chatgpt.com tab)
+## 5. ChatGPT (in a logged-in chatgpt.com tab; only if `chatgpt` is allowed)
 
 - `GET /api/auth/session` returns `accessToken`; send it as `Authorization: Bearer <token>` on the calls below. Keep
   it inside the page; never print it.
@@ -136,7 +169,7 @@ the projects. A text edit is an update with at least one `i` or `d` segment, ign
 
 ## 6. Coding-agent sessions (on every machine where an agent ran)
 
-Look in **all** of these, not only the agents the user named, on this computer (macOS, Linux or Windows; `~` is
+Look in **all** of these that the user allowed, not only the agents they named, on this computer (macOS, Linux or Windows; `~` is
 the home folder):
 
 | Tool | Where its sessions are |
@@ -159,17 +192,39 @@ the home folder):
   `agent_logs/<tool>/<machine>/<path relative to the tool's folder>`. From SQLite databases, copy the matching rows
   as JSON lines to `<database path>.related_rows.jsonl` (copy the database first; the editor may lock it). For
   `<machine>`, use `this-computer` for the local one, and a short name for each other machine.
-- **Other machines** (servers, clusters, cloud VMs): sessions stay on the machine where the agent ran. If you can
-  `ssh` to it (ask first), fetch an archive of the session folders from the window, e.g.
-  `ssh HOST 'cd ~ && find .claude/projects .codex/sessions .codex/archived_sessions .gemini/tmp -type f -newermt <since> 2>/dev/null | tar czf - -T -' > agent_sessions_HOST.tgz`,
-  then filter it like the local files and delete the archive. Otherwise give the user that command to run there.
+- **Other machines:** see section 6a.
 - **Deleted sessions:** Claude Code deletes session files about 30 days after their last activity by default
   (setting `cleanupPeriodDays`). If the window ended more than 30 days ago and few or no Claude Code sessions are
   left, record that in `gaps`.
 - In `about.json` → `agent_sessions`, record per tool and machine: folders searched, files from the window, files
   kept.
 
-## 7. Git history of the paper's files
+## 6a. Servers, clusters and several machines
+
+Sessions stay on the machine where the agent ran; browser data (Overleaf, claude.ai, ChatGPT) can only be read on
+the machine with the user's browser. `python3 -I pipeline/find_sessions.py --since <window since>` lists, with
+counts only: the session stores on this machine; hints of other machines (`Host` entries in `~/.ssh/config`, the
+Claude desktop app's `ssh-*` folders, one per SSH connection it ran Claude Code over, and VS Code / Cursor
+Remote-SSH hosts); and, on a server, traces that a laptop drove agents there (`~/.claude/remote` from the Claude
+desktop app, `~/.vscode-server`, `~/.cursor-server`). For each host it prints the fetch command.
+
+- **You run on the laptop, sessions are on a server:** for each host the user confirms, ask before connecting, then
+  run the printed command, e.g.
+  `ssh HOST 'cd ~ && find .claude/projects .codex/sessions .codex/archived_sessions .gemini/tmp -type f -newermt <since> 2>/dev/null | tar czf - -T -' > agent_sessions_HOST.tgz`,
+  extract it to a temporary folder, filter it like local files into `agent_logs/<tool>/<HOST>/`, and delete the
+  archive and the folder. If `ssh` needs a password or a second factor, give the user the command to run in their
+  own terminal instead.
+- **You run on the server, the browser is on the laptop:** you can't reach the browser. Give the user the browser
+  steps (sections 3–5) as scripts to paste into the console of their logged-in tabs on the laptop; they save
+  downloads there. Then ask them to move the downloaded files to `mydata/` on the server, on their own machines
+  only: `scp ~/Downloads/<files> HOST:<path to mydata>/`, or drag them into the folder in VS Code / Cursor
+  Remote-SSH, or the desktop app's file upload. Collect the server's sessions and Git repos directly.
+- **Several machines:** collect each machine's sessions into `agent_logs/<tool>/<machine>/` and bring everything
+  to **one** machine of the user's (where `mydata/` is), the same way. Run the analysis there once.
+- Record every machine in `about.json` → `machines` (name, how its data was fetched, or why not) and anything
+  unreachable in `gaps`.
+
+## 7. Git history of the paper's files (only if `git` is allowed)
 
 - **GitHub sync:** for each Overleaf project whose `github_sync.enabled` is true, clone `github_sync.repo` with
   the user's own GitHub access (`gh repo clone` or `git clone`; set `GIT_TERMINAL_PROMPT=0` so it can't hang on
@@ -188,13 +243,16 @@ the home folder):
 
 ```json
 {
-  "kit_version": "instructions-1",
+  "kit_version": "instructions-2",
   "collected_by": "<your name and model>",
   "paper": {"title": "", "overleaf_projects": [{"project_id": "", "name": "", "first_edit": "", "last_edit": "",
             "text_edits": 0, "tex_files": [], "github_sync": null}], "text_files": [], "comment_macros": []},
   "consent": {"share_chats_sessions_and_histories_including_coauthors": true,
               "ok_to_quote_short_excerpts_in_publications": false},
   "contributor": {"name": "", "email": "", "overleaf_id": ""},
+  "sources": {"overleaf": true, "claude.ai": true, "chatgpt": true, "claude-code": true, "codex": true,
+              "cursor": true, "copilot": true, "gemini-cli": true, "other-agents": true, "git": true},
+  "machines": [{"name": "this-computer", "role": "analysis runs here", "fetched": "local"}],
   "window": {"since": "YYYY-MM-DD", "until": "YYYY-MM-DD", "rule": "7 days before the first text edit to 7 days after the last"},
   "people": [{"overleaf_name": "", "inserted_chars": 0}],
   "coding_agents_used": ["as the user said"],
@@ -207,6 +265,7 @@ the home folder):
 }
 ```
 
+- `sources`: the user's checklist from step 1 (`false` = left out; the results say which).
 - `contributor`: the Overleaf name for the user's `overleaf_id`, and their email if they gave it or the page shows
   it (`<meta name="ol-usersEmail">`).
 - `people`: everyone in the Overleaf histories, with the characters they inserted.
@@ -233,6 +292,9 @@ Decide **with code**, not by reading:
 
 ## 10. Checks (write `CHECK_REPORT.txt`: counts and names only)
 
+Run `python3 -I pipeline/bundle.py check mydata`: it does all of the checks below and writes
+`mydata/CHECK_REPORT.txt` (only `check` is needed from that script). Fix what it reports as problems. In short:
+
 - **Overleaf completeness:** for each project, start from the final text (join `u` and `i` segments of
   `full_attributed_diff`) and undo the updates newest to oldest. For each segment list: unchanged `u` (a length)
   copies that many characters, `i` must match the text at that position and is skipped, `d` is put back. The
@@ -249,13 +311,31 @@ Decide **with code**, not by reading:
   `github_sync` or Git authors (emails inside the paper's own
   files, e.g. in `.sty` headers, stay).
 
-## 11. Review and upload
+## 11. Analyse on this machine
 
-1. Zip the folder: `mydata.zip`, containing `mydata/`.
-2. Tell the user, in a few lines: the Overleaf projects found, the window, how many chats, web sessions,
-   Codex tasks and agent session files were kept or left out (per tool and machine), the Git repos, the gaps,
-   and any problems. Point them to `mydata_REVIEW.txt` and `mydata/CHECK_REPORT.txt`. Change what they ask, then
-   zip again.
-3. When they approve, upload `mydata.zip` at the Box link (it asks for their email). If you can't attach files in
-   the browser, ask them to drag it there. Then tell them what was uploaded and when, and that they can delete
-   `mydata/`, the zip and the downloaded files.
+```
+python3 -I pipeline/analyze.py mydata          # writes aiw_work/ next to mydata/
+```
+
+It runs the bundle check, then the analysis (parse, 6-gram provenance, sentences, labels at every level, first
+drafts, relevance) and builds `aiw_work/results/` and `aiw_work/results.zip`, with conversation titles replaced by
+neutral names ("claude.ai conversation 12") and no first-draft quotes. Its last step is a **leak check**: no
+8-word run from a chat, a session, a commit or the Overleaf history that is not also in the final paper may
+appear in any results file. If the check fails, don't upload: tell the user and record the file names and counts
+in `about.json` → `notes`, then email the study contact (counts only).
+
+If a step fails on a format difference in a file you wrote, fix that file's format to match this document and run
+again. Don't change `pipeline/`; if it fails anyway, record the error message (not data) in `notes`.
+
+## 12. Review and upload
+
+1. Tell the user, in a few lines: the Overleaf projects found, the window, the sources used and left out, how many
+   chats, web sessions, Codex tasks and agent session files were kept or left out (per tool and machine), the Git
+   repos, the gaps, and the headline shares from `aiw_work/results/SUMMARY.md`. Point them to `mydata_REVIEW.txt`
+   and to **`aiw_work/results/`, which is exactly what will be sent**: `MANIFEST.txt` lists every file with its
+   size and SHA-256, and `label_report.html` shows the paper colored by label. Change what they ask (for example
+   untick a source, set it to `false` in `about.json` → `sources` and run `analyze.py` again).
+2. When they approve, upload `aiw_work/results.zip` (only that file) at the Box link (it asks for their email). If
+   you can't attach files in the browser, ask them to drag it there. Then tell them what was uploaded and when.
+3. `mydata/` and `aiw_work/` stay on their machine. They may delete them, or keep them in case of follow-up
+   questions.
