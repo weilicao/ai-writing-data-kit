@@ -36,7 +36,8 @@ STORES = [  # (tool, folder relative to HOME or CONFIG, glob of session files)
     ("continue", "~/.continue/sessions", "*.json"),
 ]
 FETCH = ("ssh {host} 'cd ~ && find .claude/projects .codex/sessions .codex/archived_sessions .gemini/tmp "
-         "-type f -newermt {since} 2>/dev/null | tar czf - -T -' > agent_sessions_{name}.tgz")
+         "-type f -newermt {since} 2>/dev/null | tar czf ~/agent_sessions.tgz -T -' && "
+         "scp {host}:agent_sessions.tgz agent_sessions_{name}.tgz && ssh {host} rm ~/agent_sessions.tgz")
 
 
 def path_of(p):

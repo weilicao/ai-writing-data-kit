@@ -31,8 +31,10 @@ to my Duke Box folder, where only I can see it.
   gaps); and the check report (counts and names only).
 - **What never leaves your computer:** your chats, your coding-agent sessions, and the Overleaf and Git
   histories. Chats appear in the results only under neutral names ("claude.ai conversation 12"), never by title or
-  text. A leak check stops the upload if any 8-word run from a chat, a session or the history (other than the
-  paper's final text) is in the results.
+  text. `about.json` goes reduced to names, counts and your choices (no email, no file paths, no list of what was
+  left out). A leak check stops the upload if any 8-word run from a chat, a session or the history (other than
+  the paper's final text) is in the analysis results; any overlap in `about.json`'s notes, which your agent writes,
+  is shown to you to review.
 - **See exactly what will be sent:** the folder `aiw_work/results/` is the upload, unzipped. `MANIFEST.txt` lists
   every file, and `label_report.html` shows your paper colored by label. Open them before you approve.
 - Your agent works through files and looks only at counts, so the chats and sessions don't pass through its model

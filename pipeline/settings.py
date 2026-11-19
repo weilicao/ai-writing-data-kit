@@ -146,7 +146,8 @@ def derive(inp):
 # about.json -> "sources": {name: true | false | {"use": bool, ...}}; a source missing from it is allowed
 SOURCES = ["overleaf", "claude.ai", "chatgpt", "claude-code", "codex", "cursor", "copilot", "gemini-cli",
            "other-agents", "git"]
-AGENT_TOOL_SOURCE = {"claude-code": "claude-code", "codex": "codex", "cursor": "cursor", "vscode-copilot": "copilot",
+AGENT_TOOL_SOURCE = {"claude-code": "claude-code", "codex": "codex", "codex-archived": "codex", "cursor": "cursor",
+                     "vscode-copilot": "copilot",
                      "copilot": "copilot", "gemini-cli": "gemini-cli"}
 
 

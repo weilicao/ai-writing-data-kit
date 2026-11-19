@@ -440,7 +440,7 @@ def agent_log_rows(inp):
                     continue
                 conv = rel[:-6]
                 rows += claude_code_rows(recs, conv, f"Claude Code {os.path.basename(conv)[:14]}", "ai:claude-code")
-            elif tool == "codex" and re.search(r"\.jsonl(\.zst)?$", fn):
+            elif tool in ("codex", "codex-archived") and re.search(r"\.jsonl(\.zst)?$", fn):
                 conv = re.sub(r"\.jsonl(\.zst)?$", "", rel)
                 rows += codex_rows(read_jsonl(path, notes), conv, f"Codex {os.path.basename(conv)[-12:]}")
             elif tool == "cursor" and fn.endswith(".related_rows.jsonl"):

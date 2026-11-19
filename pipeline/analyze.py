@@ -31,11 +31,14 @@ def main():
     bundle = os.path.join(work, "bundle")
     os.makedirs(bundle, exist_ok=True)
     link = os.path.join(bundle, "mydata")
-    if not os.path.exists(link):
-        try:
-            os.symlink(mydata, link, target_is_directory=True)
-        except OSError:  # e.g. Windows without symlink rights
-            shutil.copytree(mydata, link)
+    if os.path.islink(link):
+        os.remove(link)
+    elif os.path.isdir(link):
+        shutil.rmtree(link)  # a copy from an earlier run: copy again, mydata/ may have changed
+    try:
+        os.symlink(mydata, link, target_is_directory=True)
+    except OSError:  # e.g. Windows without symlink rights
+        shutil.copytree(mydata, link)
     for d in ("parsed", "analysis"):
         os.makedirs(os.path.join(work, d), exist_ok=True)
     settings_path = os.path.join(work, "settings.json")
@@ -43,12 +46,14 @@ def main():
     s["redact"] = True  # shared results never hold conversation titles
     json.dump(s, open(settings_path, "w"), indent=1)
 
-    py = [sys.executable, "-I"]
+    py = [sys.executable, "-X", "utf8", "-I"]  # UTF-8 files on every platform (Windows defaults to cp1252)
     checker = next(p for p in (os.path.join(HERE, "bundle.py"), os.path.join(HERE, "kit_reference", "bundle.py"))
                    if os.path.exists(p))
     check = subprocess.run(py + [checker, "check", mydata], capture_output=True, text=True)
     open(os.path.join(work, "CHECK_REPORT.txt"), "w").write(check.stdout + check.stderr)
     print(f"== bundle check: {'problems found, see' if check.returncode else 'OK,'} {os.path.join(work, 'CHECK_REPORT.txt')}")
+    if check.returncode:
+        raise SystemExit("Fix the problems the bundle check lists (INSTRUCTIONS.md section 10), then run again.")
     for step in STEPS:
         print(f"== {step}", flush=True)
         r = subprocess.run(py + [os.path.join(HERE, step), "--data", work])

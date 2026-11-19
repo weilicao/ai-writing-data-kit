@@ -1,4 +1,8 @@
-"""Assemble and check a data bundle for the paper AI-authorship study (collection kit v1).
+"""Assemble and check a data bundle for the paper AI-authorship study.
+
+In the published kit (pipeline/bundle.py) only `check` is part of the procedure; `pack` and `auto` refuse to run
+there, because the bundle (mydata/) never leaves the contributor's machine. The study team uses the other
+commands as reference tools.
 
 Python >= 3.9, standard library only. Everything runs on your own machine; nothing is uploaded.
 
@@ -865,6 +869,8 @@ def filter_chats(bundle, about, cfg):
 
 
 def cmd_auto(args):
+    if os.path.basename(HERE) == "pipeline":  # the published kit: the bundle itself is never packed or sent
+        sys.exit("In the kit only `check` is used; mydata/ stays on this machine. Run pipeline/analyze.py instead.")
     bundle = args.bundle
     about = load(about_path(bundle))
     cfg = auto_cfg(about)
@@ -954,7 +960,8 @@ def who(meta, origin=None):
     return (origin or {}).get("kind", "unknown")
 
 
-CONSENT_KEYS = ("share_chats_sessions_and_histories_including_coauthors",  # INSTRUCTIONS.md
+CONSENT_KEYS = ("use_data_locally_and_share_results",  # INSTRUCTIONS.md, instructions-2 (local analysis)
+                "share_chats_sessions_and_histories_including_coauthors",  # instructions-1
                 "share_chats_and_overleaf_history_including_coauthors")  # this script's own bundles
 
 
@@ -1148,7 +1155,8 @@ def run_check(bundle):
              "PROBLEMS (fix these, or ask before sending):"] + [f"  - {p}" for p in problems or ["none"]]
     lines += ["", "NOTES:"] + [f"  - {n}" for n in notes or ["none"]]
     lines += ["", "CONTENTS:"] + [f"  {s}" for s in summary]
-    lines += ["", "RESULT: " + ("READY TO SEND" if not problems else f"NOT READY ({len(problems)} problems)")]
+    lines += ["", "RESULT: " + ("CHECK PASSED (now run the analysis; mydata/ itself is never sent)" if not problems
+                                else f"NOT READY ({len(problems)} problems)")]
     report = "\n".join(lines) + "\n"
     with open(os.path.join(bundle, "CHECK_REPORT.txt"), "w", encoding="utf-8") as f:
         f.write(report)
@@ -1162,6 +1170,8 @@ def cmd_check(args):
 
 
 def cmd_pack(args):
+    if os.path.basename(HERE) == "pipeline":  # the published kit: the bundle itself is never packed or sent
+        sys.exit("In the kit only `check` is used; mydata/ stays on this machine. Run pipeline/analyze.py instead.")
     report, problems = run_check(args.bundle)
     print(report)
     if problems and not args.force:

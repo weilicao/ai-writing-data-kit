@@ -3,3 +3,5 @@ mydata/
 *.zip
 __pycache__/
 TEST_NOTES.md
+aiw_work/
+*.tgz

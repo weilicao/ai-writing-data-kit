@@ -55,8 +55,9 @@ uploads): https://duke.app.box.com/f/b381de52ca74476dbe81feb0e857347f
    Don't collect a source they untick. Tell them: text that came from a left-out AI source can only be labeled
    Human or Unclear, never AI.
 4. **Where agents ran.** Which machines (laptop, servers, clusters, cloud VMs). Before asking, run
-   `python3 -I pipeline/find_sessions.py` and show the hints it found, so they only confirm (section 6a). Say on
-   which machine you are running and whether it can reach their browser.
+   `python3 -I pipeline/find_sessions.py` and show the hints it found, so they only confirm (section 6a); run it
+   again with `--since <window start>` once the window is known (section 3). Say on which machine you are running
+   and whether it can reach their browser.
 5. Consent: *"Do you agree to let the analysis use your AI chats, coding-agent sessions and the paper's Overleaf
    and Git history on your computer, and to share the results: the paper's final text with a label for every part,
    statistics, and the names of co-authors who edited it? Your chats, sessions and histories are not shared. May
@@ -69,8 +70,9 @@ tell them exactly where.
 
 ## 2. The local bundle
 
-Create a folder `mydata/` (next to this kit, on the machine where the analysis will run; it stays there) with
-exactly this layout. Formats are fixed because `pipeline/` reads them. Leave out the files of sources the user
+Create the folder `mydata/` **inside the kit folder** (the clone of this repository), on the machine where the
+analysis will run; it stays there. `pipeline/analyze.py` later writes `aiw_work/` beside it. Use exactly this
+layout. Formats are fixed because `pipeline/` reads them. Leave out the files of sources the user
 unticked.
 
 ```
@@ -79,7 +81,9 @@ mydata/
   overleaf_<project id>.json      one per Overleaf project (section 3)
   claude_ai_<org uuid>.json       one per claude.ai account with chats (section 4)
   chatgpt.json                    ChatGPT chats and Codex cloud tasks (section 5)
-  agent_logs/<tool>/<machine>/... coding-agent session files, copied unchanged (section 6)
+  agent_logs/<tool>/<machine>/... coding-agent session files, copied unchanged (section 6); <tool> is one of
+                                  claude-code, codex, codex-archived, cursor, copilot, gemini-cli, windsurf,
+                                  cline, roo-code, continue, aider
   git_<owner>__<repo>.json        history of the paper's files in a Git repo (section 7)
   other/                          anything else that helps (other AI tools' exports, notes)
   CHECK_REPORT.txt                counts and names only, no content (section 10)
@@ -219,6 +223,14 @@ desktop app, `~/.vscode-server`, `~/.cursor-server`). For each host it prints th
   downloads there. Then ask them to move the downloaded files to `mydata/` on the server, on their own machines
   only: `scp ~/Downloads/<files> HOST:<path to mydata>/`, or drag them into the folder in VS Code / Cursor
   Remote-SSH, or the desktop app's file upload. Collect the server's sessions and Git repos directly.
+- **You run on the server, with browser tools that drive the laptop's Chrome** (e.g. the Claude desktop app with
+  Claude in Chrome): the browser steps work, but their downloads land on the laptop; move them to `mydata/` on the
+  server as above.
+- **Results back to the laptop:** if the analysis ran on a server, the user needs `aiw_work/results/` on the laptop
+  to open `label_report.html` and to upload `results.zip`: ask them to copy it (`scp -r HOST:<kit>/aiw_work/results
+  .` and `results.zip`, or download it in VS Code).
+- **`ssh` from Windows PowerShell:** don't redirect binary output (`> file.tgz` corrupts it); run
+  `ssh HOST "<find …> | tar czf ~/agent_sessions.tgz -T -"` and then `scp HOST:agent_sessions.tgz .`.
 - **Several machines:** collect each machine's sessions into `agent_logs/<tool>/<machine>/` and bring everything
   to **one** machine of the user's (where `mydata/` is), the same way. Run the analysis there once.
 - Record every machine in `about.json` → `machines` (name, how its data was fetched, or why not) and anything
@@ -247,7 +259,7 @@ desktop app, `~/.vscode-server`, `~/.cursor-server`). For each host it prints th
   "collected_by": "<your name and model>",
   "paper": {"title": "", "overleaf_projects": [{"project_id": "", "name": "", "first_edit": "", "last_edit": "",
             "text_edits": 0, "tex_files": [], "github_sync": null}], "text_files": [], "comment_macros": []},
-  "consent": {"share_chats_sessions_and_histories_including_coauthors": true,
+  "consent": {"use_data_locally_and_share_results": true,
               "ok_to_quote_short_excerpts_in_publications": false},
   "contributor": {"name": "", "email": "", "overleaf_id": ""},
   "sources": {"overleaf": true, "claude.ai": true, "chatgpt": true, "claude-code": true, "codex": true,
@@ -317,12 +329,22 @@ Run `python3 -I pipeline/bundle.py check mydata`: it does all of the checks belo
 python3 -I pipeline/analyze.py mydata          # writes aiw_work/ next to mydata/
 ```
 
+(On Windows use `py -X utf8 -I` instead of `python3 -I`, here and in sections 1 and 10.) The analysis reads the
+sessions of Claude Code (local and on the web), Codex and Cursor; sessions of the other tools are collected and
+counted, but not yet analysed (`about.json` → `analysis` → `parse_notes` says so). Codex `.jsonl.zst` files need
+the `zstd` program (`brew install zstd`, `apt install zstd`, or `winget install zstd`); without it they are skipped
+and listed in the parse notes, so record that in `gaps`.
+
 It runs the bundle check, then the analysis (parse, 6-gram provenance, sentences, labels at every level, first
 drafts, relevance) and builds `aiw_work/results/` and `aiw_work/results.zip`, with conversation titles replaced by
 neutral names ("claude.ai conversation 12") and no first-draft quotes. Its last step is a **leak check**: no
 8-word run from a chat, a session, a commit or the Overleaf history that is not also in the final paper may
-appear in any results file. If the check fails, don't upload: tell the user and record the file names and counts
-in `about.json` → `notes`, then email the study contact (counts only).
+appear in any analysis file of the results. `about.json` and the check report are shared reduced (names, counts and
+choices; no email, file paths or list of left-out items, only their number per reason); since you write them during
+collection, often inside a session that is itself collected, overlaps there are listed in `SUMMARY.md` under "To
+review": show the user those fields before they approve. If the check fails, `results.zip` is not written: don't upload anything; tell the user, and draft for them an email to
+the study contact with the file names and counts from `SUMMARY.md` (no text), which they send themselves.
+If the bundle check (section 10) reports problems, `analyze.py` stops; fix them first.
 
 If a step fails on a format difference in a file you wrote, fix that file's format to match this document and run
 again. Don't change `pipeline/`; if it fails anyway, record the error message (not data) in `notes`.
