@@ -25,9 +25,9 @@ to my Duke Box folder, where only I can see it.
 
 - **The analysis runs on your machine.** The kit includes the analysis code (`pipeline/`, standard-library Python).
   Your agent collects into a folder on your computer (`mydata/`) and runs the analysis there.
-- **What I receive** is only `results.zip`: the final text of your paper with a label (AI, human, mixed or
-  unclear, and where it came from) for every word, sentence, paragraph and section; reports by section, paragraph,
-  and for captions and tables; statistics per label; `about.json` (which sources were used or left out, and any
+- **What I receive** is only `results.zip`: the final text of your paper with a label for every word (AI, human
+  or unclear, and where it came from) and every sentence (AI, AI edited by a person, a person's draft edited by AI,
+  human or unclear); a report by section and paragraph, and for captions and tables; statistics per label; `about.json` (which sources were used or left out, and any
   gaps); and the check report (counts and names only).
 - **What never leaves your computer:** your chats, your coding-agent sessions, and the Overleaf and Git
   histories. Chats appear in the results only under neutral names ("claude.ai conversation 12"), never by title or

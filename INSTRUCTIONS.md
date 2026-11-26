@@ -335,8 +335,8 @@ counted, but not yet analysed (`about.json` → `analysis` → `parse_notes` say
 the `zstd` program (`brew install zstd`, `apt install zstd`, or `winget install zstd`); without it they are skipped
 and listed in the parse notes, so record that in `gaps`.
 
-It runs the bundle check, then the analysis (parse, 6-gram provenance, sentences, labels at every level, first
-drafts, relevance) and builds `aiw_work/results/` and `aiw_work/results.zip`, with conversation titles replaced by
+It runs the bundle check, then the analysis (parse, 6-gram provenance, word labels, first
+drafts, sentence labels, relevance) and builds `aiw_work/results/` and `aiw_work/results.zip`, with conversation titles replaced by
 neutral names ("claude.ai conversation 12") and no first-draft quotes. Its last step is a **leak check**: no
 8-word run from a chat, a session, a commit or the Overleaf history that is not also in the final paper may
 appear in any analysis file of the results. `about.json` and the check report are shared reduced (names, counts and

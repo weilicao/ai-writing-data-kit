@@ -1,10 +1,9 @@
 """Build the folder a contributor shares: <data>/results/ (and results.zip), from the local analysis.
 
 Only these files go in (an allowlist; nothing else from <data> is copied):
-  the labeled final paper at every level   level_words.csv, level_ngrams.csv, level_sentences.csv,
-                                           level_paragraphs.csv, level_sections.csv
+  the labeled final paper                  level_words.csv, level_ngrams.csv, level_sentences.csv
   per-label stats                          level_summary.csv, word_breakdown.csv
-  section, paragraph and float report      label_report.html
+  section, paragraph and sentence report   label_report.html
   first drafts                             first_drafts.csv, first_draft_transitions.csv, first_draft_summary.md
   relevance check                          relevance_report.md, suspicious_matches.csv
   about.json                               from the bundle, plus the sources used and left out
@@ -35,9 +34,8 @@ import match_provenance as mp  # noqa: E402
 import readers  # noqa: E402
 import settings  # noqa: E402
 
-FILES = ["level_words.csv", "level_ngrams.csv", "level_sentences.csv", "level_paragraphs.csv", "level_sections.csv",
-         "level_summary.csv", "word_breakdown.csv", "label_report.html", "first_drafts.csv",
-         "first_draft_transitions.csv", "first_draft_summary.md", "relevance_report.md", "suspicious_matches.csv"]
+FILES = ["level_words.csv", "level_ngrams.csv", "level_sentences.csv", "level_summary.csv", "word_breakdown.csv",
+         "label_report.html", "first_drafts.csv", "first_draft_transitions.csv", "first_draft_summary.md", "relevance_report.md", "suspicious_matches.csv"]
 WORD = re.compile(r"[a-z0-9]+")
 N = 8
 CAVEAT = ("Text that came from a source left out of the analysis can only be labeled Human (if it was typed) or "
@@ -176,12 +174,16 @@ def main():
     # summary: headline shares and sources
     rows = list(csv.DictReader(open(os.path.join(out, "word_breakdown.csv"))))
     lines = [f"# Results: {S.title}", "",
-             "What this folder holds: the final paper text with a label for every word, sentence, paragraph and "
-             "section, the per-label shares, the first-draft analysis, the relevance check, about.json and the bundle "
+             "What this folder holds: the final paper text with a label for every word and sentence, the "
+             "per-label shares, the first-draft analysis, the relevance check, about.json and the bundle "
              "check. It holds no chat, session or Overleaf-history text (see the leak check below).", "",
              "## Word labels", "", "| block | group | share |", "|---|---|---|"]
     lines += [f"| {r['block']} | {r['group']} | {float(r['share']):.1%} |" for r in rows
               if r["category"] == "(group total)" and r["share"]]
+    lines += ["", "## Sentence labels", "", "| block | label | sentences | share of words |", "|---|---|---|---|"]
+    lines += [f"| {r['block']} | {r['label']} | {r['units']} | {float(r['share']):.1%} |"
+              for r in csv.DictReader(open(os.path.join(out, "level_summary.csv")))
+              if r["level"] == "sentence" and r["label"] != "(group total)" and r["share"]]
     left = about["analysis"]["sources_left_out"]
     lines += ["", "## Sources", "", "Used: " + ", ".join(about["analysis"]["sources_used"]) + ".",
               "Left out by the contributor: " + (", ".join(left) if left else "none") + "."]

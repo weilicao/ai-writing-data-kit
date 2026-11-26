@@ -16,7 +16,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 STEPS = ["parse_raw.py", "match_provenance.py", "explain_edits.py", "word_breakdown.py", "levels.py",
-         "first_draft.py", "check_relevance.py", "make_results.py"]
+         "first_draft.py", "sentence_labels.py", "check_relevance.py", "make_results.py"]
 
 
 def main():

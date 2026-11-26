@@ -1,4 +1,22 @@
-"""The label space: group -> category -> evidence, the same for every paper (approved 2026-11-19).
+"""The label space: words (group -> category -> evidence, approved 2026-11-19) and sentences (five labels, approved
+2026-11-26; paragraph and section labels are left for later: they can be built from the sentence labels).
+
+Sentence level (sentence_label below): who drafted the sentence, and whether someone else then edited it.
+  AI                 AI words (as written or retyped) >= 15%, the first draft is not the contributor's, and against
+                     its AI source (the closest 1-2 sentences of an AI output that supplied its words) no word was
+                     replaced or added: the AI sentence as written, or only cut (a cut leaves one author; Pangram 4,
+                     arXiv:2607.27183, sec. 3.5; TRIM_IS_EDIT switches this)
+  AI, human-edited   the same, but words were replaced or added, and the sentence holds words that are not AI
+                     (typed or pasted by a person) or AI words a person retyped (authorship entangled: "homogeneous"
+                     mixed text); a difference made only of other AI words (outputs merged, or revised by AI) is AI
+  Human, AI-edited   the first draft (DIRECTION_THRESHOLD) is a person's and AI words are >= 15%
+  Human              AI words < 15% and Human >= Unclear (writer: the person with most Human words)
+  Unclear            AI words < 15% and Unclear > Human
+  Template/Excluded  only template or excluded words (left out of shares)
+Each sentence keeps its edit counts against the AI source (kept, replaced, added, deleted, word-level edit distance)
+as numbers, not labels.
+
+The old unit rule (classify, below) is kept for the word-share statistics of a unit and for paper_sentences.csv.
 
 Word level (the base; every other level is built from it):
   group     AI | Human | Unclear | Template | Excluded
@@ -28,6 +46,57 @@ MIXED_SHARE = 0.15  # ... Mixed at or above this, below AI_SHARE
 VERBATIM = 0.9     # AI as written, with nothing changed
 LIGHT_EDIT = 0.15  # changed words (added + removed) per unit word, at or below = lightly edited
 POLISHED = 0.5     # the contributor's own earlier words repeated by AI
+
+
+SENTENCE_LABELS = ["AI", "AI, human-edited", "Human, AI-edited", "Human", "Unclear", "Template", "Excluded"]
+SENTENCE_GROUP = {"AI": "AI", "AI, human-edited": "Mixed", "Human, AI-edited": "Mixed", "Human": "Human",
+                  "Unclear": "Unclear", "Template": "Template", "Excluded": "Excluded"}
+DIRECTION_THRESHOLD = "T3"  # first-draft threshold that decides who drafted a sentence (first_draft.py)
+TRIM_IS_EDIT = False        # True: an AI sentence a person only cut counts as "AI, human-edited"
+
+
+def edit_ops(a, b):
+    """Word-level Levenshtein from AI span a to final sentence b: dict(distance, kept, replaced, added, deleted,
+    longest_added). distance is normalized by the longer of the two."""
+    n, m = len(a), len(b)
+    d = [list(range(m + 1))] + [[i] + [0] * m for i in range(1, n + 1)]
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] != b[j - 1]))
+    i, j = n, m
+    kept = rep = add = dele = run = longest = 0
+    while i or j:
+        if i and j and d[i][j] == d[i - 1][j - 1] + (a[i - 1] != b[j - 1]):
+            kept, rep = kept + (a[i - 1] == b[j - 1]), rep + (a[i - 1] != b[j - 1])
+            i, j, run = i - 1, j - 1, 0
+        elif j and d[i][j] == d[i][j - 1] + 1:
+            add, j, run = add + 1, j - 1, run + 1
+            longest = max(longest, run)
+        else:
+            dele, i, run = dele + 1, i - 1, 0
+    return dict(distance=round(d[n][m] / max(n, m, 1), 3), kept=kept, replaced=rep, added=add, deleted=dele,
+                longest_added=longest)
+
+
+def sentence_label(st, edit, first_draft_group):
+    """One of SENTENCE_LABELS from a sentence's word statistics (classify's stats), its edit operations against the
+    AI source (edit_ops, or None when no AI output text is available) and its first draft's group."""
+    n = st["counted"]
+    if not n:
+        return "Template" if st["Template"] else "Excluded"
+    if (st["ai_as_written"] + st["retyped"]) / n < MIXED_SHARE:
+        return "Human" if st["Human"] and st["Human"] >= st["Unclear"] else "Unclear"
+    if first_draft_group == "Human":
+        return "Human, AI-edited"
+    if edit is None:  # AI words known only from a commit trailer or similar: use the word evidence
+        changed = st["changed_human"] + st["changed_unclear"] + st["retyped"] + (st["removed"] if TRIM_IS_EDIT else 0)
+        return "AI, human-edited" if changed else "AI"
+    # a replaced or added word counts as a person's edit only if the sentence holds a non-AI word (typed, pasted)
+    # or AI words a person retyped; otherwise the difference is other AI text (an output merged or revised by AI)
+    human_words = st["changed_human"] + st["changed_unclear"] + st["retyped"]
+    if (edit["replaced"] or edit["added"]) and human_words or (TRIM_IS_EDIT and edit["deleted"]):
+        return "AI, human-edited"
+    return "AI"
 
 
 def tool(label):
